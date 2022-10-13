@@ -13,7 +13,9 @@ import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.telephony.SmsManager
+import android.util.Log
 import android.widget.Button
+import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -35,6 +37,9 @@ import kotlinx.android.synthetic.main.activity_main.*
      private lateinit var adapter:RvAdapter
      private lateinit var list:ArrayList<Contact>
      private lateinit var myDbHelper: MyDbHelper
+     private lateinit var contactList:ArrayList<Contact>
+     private lateinit var filteredList:ArrayList<Contact>
+     private val TAG = "MainActivity"
 
      override fun onCreate(savedInstanceState: Bundle?) {
          super.onCreate(savedInstanceState)
@@ -84,6 +89,21 @@ import kotlinx.android.synthetic.main.activity_main.*
 
          readContact()
 
+
+         search.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+             androidx.appcompat.widget.SearchView.OnQueryTextListener {
+             override fun onQueryTextSubmit(query: String?): Boolean {
+                 return false
+             }
+
+             override fun onQueryTextChange(newText: String?): Boolean {
+                 filterList(newText)
+                 return true
+             }
+
+         })
+
+
      }
 
      override fun onResume() {
@@ -114,15 +134,7 @@ import kotlinx.android.synthetic.main.activity_main.*
          }
      }
 
-     override fun onStop() {
-         super.onStop()
-         list.forEach {
-             if (myDbHelper.getAllContacts().contains(it)){
-             }else{
-                 myDbHelper.addContact(it)
-             }
-         }
-     }
+
 
      private fun sendSms(position: Int){
          askPermission(Manifest.permission.SEND_SMS){
@@ -141,6 +153,7 @@ import kotlinx.android.synthetic.main.activity_main.*
              sendBtn.setOnClickListener {
                  try {
                  sms.sendTextMessage(number.text.toString(), null, text.text.toString(), null, null)
+                     Toast.makeText(this, "Sent Message!", Toast.LENGTH_SHORT).show()
                      dialog.cancel()
              } catch (ex: Exception) {
              }
@@ -180,7 +193,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
      @SuppressLint("NewApi", "Range")
      private fun readContact() {
-         val contactList = ArrayList<Contact>()
+         contactList = ArrayList<Contact>()
          askPermission(Manifest.permission.READ_CONTACTS){
             val contacts=contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null)
             while (contacts!!.moveToNext()){
@@ -192,14 +205,19 @@ import kotlinx.android.synthetic.main.activity_main.*
             }
              contacts.close()
 
-             contactList.forEach {
-                 if (!myDbHelper.getAllContacts().contains(it)){
-                     list.add(it)
-                 }
-             }
 
-             adapter=RvAdapter(list)
-             rv.adapter=adapter
+             if (!list.containsAll(contactList)){
+                list.addAll(contactList)
+                 Log.d(TAG, "readContact: $contactList")
+                 adapter=RvAdapter(list)
+                 rv.adapter=adapter
+             }
+//             contactList.forEach {
+//                 if (!list.contains(it)){
+//                     list.add(it)
+//                 }
+//             }
+
          }.onDeclined { e->
              if(e.hasDenied()){
                  AlertDialog.Builder(this)
@@ -217,4 +235,23 @@ import kotlinx.android.synthetic.main.activity_main.*
              }
          }
      }
+
+
+     private fun filterList(newText: String?) {
+         filteredList= ArrayList()
+         for (i in list) {
+             if (i.name!!.toLowerCase().contains(newText!!.toLowerCase())){
+                 filteredList.add(i)
+             }
+         }
+         if (filteredList.isEmpty()){
+             adapter.list=filteredList
+             adapter.notifyDataSetChanged()
+             Toast.makeText(this, "No data found", Toast.LENGTH_SHORT).show()
+         }else{
+             adapter.list=filteredList
+             adapter.notifyDataSetChanged()
+         }
+     }
+
  }

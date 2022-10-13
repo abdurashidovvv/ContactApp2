@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Android Projects/ContactApp/app/src/main/res/drawable/img_background.xml" value="0.148" />
+        <entry key="..\:/Android Projects/ContactApp/app/src/main/res/drawable/search_card.xml" value="0.1515" />
         <entry key="..\:/Android Projects/ContactApp/app/src/main/res/layout/activity_main.xml" value="0.18" />
         <entry key="..\:/Android Projects/ContactApp/app/src/main/res/layout/dialog_add_contact.xml" value="0.1" />
         <entry key="..\:/Android Projects/ContactApp/app/src/main/res/layout/dialog_send_sms.xml" value="0.20833333333333334" />
